@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoseProxy 私人配置管理中心</title>
+<style>
+:root{--bg:#0f1117;--panel:#171a24;--panel2:#1d2130;--line:#2a2f42;--txt:#e8eaf2;--dim:#9aa0b5;
+--acc:#e86fa5;--acc2:#8f7bff;--ok:#4ade80;--warn:#fbbf24;--err:#f87171}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;font-size:14px}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#e86fa5,#8f7bff);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff}
+h1{font-size:19px;font-weight:700}
+.sub{color:var(--dim);font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);cursor:pointer;font-size:13px;transition:.15s}
+.btn:hover{border-color:var(--acc)}
+.btn.primary{background:linear-gradient(135deg,#e86fa5,#8f7bff);border:none;color:#fff;font-weight:600}
+.btn.danger{color:var(--err)}
+.btn.ok{color:var(--ok)}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:7px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grow{flex:1}
+input[type=text],input[type=password],input[type=number],select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 12px;font-size:13px;outline:none;width:100%;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+textarea{min-height:120px;resize:vertical;font-family:Consolas,monospace;font-size:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:5px 12px;border-radius:99px;border:1px solid var(--line);cursor:pointer;font-size:12px;color:var(--dim)}
+.chip.active{border-color:var(--acc);color:var(--acc);background:rgba(232,111,165,.08)}
+table{width:100%;border-collapse:collapse}
+th{color:var(--dim);font-size:12px;font-weight:400;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid rgba(42,47,66,.6);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.name{font-weight:600}
+.muted{color:var(--dim);font-size:12px}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;background:rgba(74,222,128,.12);color:var(--ok)}
+.badge.off{background:rgba(248,113,113,.12);color:var(--err)}
+.badge.full{background:rgba(251,191,36,.14);color:var(--warn)}
+.switch{position:relative;width:42px;height:23px;display:inline-block;cursor:pointer}
+.switch input{opacity:0;width:0;height:0}
+.sl{position:absolute;inset:0;background:#2a2f42;border-radius:99px;transition:.2s}
+.sl:before{content:"";position:absolute;width:17px;height:17px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.2s}
+.switch input:checked + .sl{background:var(--acc)}
+.switch input:checked + .sl:before{transform:translateX(19px)}
+.tab{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tab button{background:none;border:none;color:var(--dim);padding:8px 16px;cursor:pointer;font-size:13.5px;border-bottom:2px solid transparent}
+.tab button.active{color:var(--txt);border-bottom-color:var(--acc)}
+.tabpane{display:none}.tabpane.show{display:block}
+.hint{color:var(--dim);font-size:12px;line-height:1.7}
+.pathline{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-family:Consolas,monospace;font-size:12px;color:var(--acc2);word-break:break-all}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.label{color:var(--dim);font-size:12px;margin:12px 0 6px}
+.rec{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid rgba(42,47,66,.5);font-size:12.5px}
+.rec:last-child{border-bottom:none}
+.rec .t{color:var(--dim);white-space:nowrap}
+.rec .d{color:var(--txt)}
+.rec .a{color:var(--acc2);white-space:nowrap}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#232838;border:1px solid var(--line);padding:11px 20px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;max-width:80vw}
+#toast.show{opacity:1}
+.loginbox{max-width:420px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px}
+.code{font-family:Consolas,monospace;letter-spacing:2px;color:var(--acc);font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;width:min(640px,92vw);max-height:86vh;overflow:auto}
+.mbox h3{margin-bottom:12px}
+.close{float:right;cursor:pointer;color:var(--dim);font-size:18px}
+.flex{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+<div id="loginView" style="display:none">
+  <div class="loginbox">
+    <div class="flex" style="margin-bottom:16px"><div class="logo">R</div><div><h1>RoseProxy 管理中心</h1><div class="sub">私人使用 · 数据保存在私有仓库</div></div></div>
+    <div class="label">管理员访问令牌（Fine-grained Token）</div>
+    <input type="password" id="loginToken" placeholder="github_pat_...">
+    <div class="hint" style="margin:10px 0">仅用于读取/修改你的私有仓库 roseproxy 中的配置数据，仅保存在本浏览器。不会上传到任何第三方。</div>
+    <button class="btn primary" style="width:100%;margin-top:8px" id="btnLogin">进入管理中心</button>
+    <div class="hint" style="margin-top:14px">首次使用：在 GitHub → Settings → Developer settings → Fine-grained tokens 创建 Token，仓库权限仅勾选 roseproxy（Contents 读写、Metadata 只读），然后粘贴到上方即可。</div>
+  </div>
+</div>
+
+<div id="appView" style="display:none">
+<div class="wrap">
+  <header>
+    <div class="logo">R</div>
+    <div><h1>RoseProxy 私人配置管理中心</h1><div class="sub" id="ownerInfo"></div></div>
+    <div class="grow"></div>
+    <button class="btn danger sm" id="btnLogout">退出</button>
+  </header>
+
+  <div class="tab">
+    <button class="active" data-t="t1">配置文件</button>
+    <button data-t="t2">生成配置</button>
+    <button data-t="t3">设备管理</button>
+    <button data-t="t4">操作记录</button>
+    <button data-t="t5">使用说明</button>
+  </div>
+
+  <div class="tabpane show" id="t1">
+    <div class="hint" style="margin-bottom:12px">每个配置最多绑定 <b>3 台设备</b>。启停开关决定该配置能否被手机使用；接入码是手机 APP 首次使用时填写的口令。</div>
+    <table>
+      <thead><tr><th style="width:30%">配置</th><th>节点</th><th>接入码</th><th>设备占用</th><th>状态</th><th style="width:180px">操作</th></tr></thead>
+      <tbody id="profileRows"></tbody>
+    </table>
+    <div class="muted" id="emptyHint" style="margin-top:10px;display:none">暂无配置，请到「生成配置」创建。</div>
+  </div>
+
+  <div class="tabpane" id="t2">
+    <div class="grid2">
+      <div>
+        <div class="label">配置名称</div>
+        <input type="text" id="gName" placeholder="例如：家庭共享-香港">
+        <div class="label">分享链接（ss:// vmess:// vless:// trojan://，每行一个）</div>
+        <textarea id="gLinks" placeholder="从机场订阅复制节点链接粘贴到这里，每行一个"></textarea>
+        <div class="label">备注（可选）</div>
+        <input type="text" id="gNotes" placeholder="例如：3 人共用，2026 年 10 月生效">
+        <div style="margin-top:14px"><button class="btn primary" id="gSubmit">生成并保存到私有仓库</button></div>
+        <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:14px">
+          <div class="label">或：上传已有的 YAML 配置文件</div>
+          <input type="text" id="uName" placeholder="配置名称（不填则用文件名）">
+          <input type="file" id="uFile" accept=".yaml,.yml,.txt" style="margin:8px 0">
+          <div><button class="btn" id="uSubmit">上传并入库</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="label">生成说明</div>
+        <div class="hint">
+          · 系统自动解析节点链接，生成标准 Clash 配置（国内直连 + 境外走代理）。<br><br>
+          · 生成的 YAML 保存到私有仓库 <b>roseproxy/profiles/</b>，并登记到操作记录。<br><br>
+          · 手机 APP 使用「接入码」拉取该配置；新配置自动生成一个接入码（可在配置文件页复制/重置）。<br><br>
+          · 如需从已有配置改造，先在配置文件页点「复制YAML」，粘贴到文本编辑器修改后，在配置页点「编辑」整体替换。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabpane" id="t3">
+    <div class="hint" style="margin-bottom:12px">手机 APP 首次打开会显示一个 <b>8 位设备码</b>。在此把设备码绑定到某个配置即可（每配置最多 3 台）。解绑后名额自动释放。</div>
+    <table>
+      <thead><tr><th>设备码</th><th>设备名</th><th>绑定配置</th><th>绑定时间</th><th>操作</th></tr></thead>
+      <tbody id="deviceRows"></tbody>
+    </table>
+    <div class="muted" id="deviceEmpty" style="margin-top:10px;display:none">暂无绑定设备。</div>
+  </div>
+
+  <div class="tabpane" id="t4">
+    <div class="hint" style="margin-bottom:10px">记录保存在私有仓库 <b>roseproxy/data/records.json</b>，以下显示最近 200 条。</div>
+    <div id="records"></div>
+  </div>
+
+  <div class="tabpane" id="t5">
+    <div class="hint" style="margin-bottom:12px">RoseProxy 蔷薇代理 v2.0 · 私人托管模式</div>
+    <div class="label">数据仓库（私有）</div>
+    <div class="pathline" id="infoRepo"></div>
+    <div class="label">本网站仓库（公开页面 + 令牌保护）</div>
+    <div class="pathline" id="infoWeb"></div>
+    <div class="label">手机 APP 工作流程</div>
+    <div class="hint" style="margin-top:8px">
+      1. 安装 APK，首次打开填写「接入码」（本页配置列表可见）。<br>
+      2. APP 从私有仓库读取配置并校验：配置已启用 + 该设备码已绑定 + 未超过 3 台 → 允许使用。<br>
+      3. 本页停用配置或解绑设备后，手机端下一次启动即被拒绝。<br>
+      4. 配置内容、设备绑定、操作记录全部保存在你的 GitHub 私有仓库，仅你可见。
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="modal" id="editModal"><div class="mbox">
+  <span class="close" onclick="closeModal('editModal')">✕</span>
+  <h3>编辑配置 <span class="muted" id="editName"></span></h3>
+  <div class="label">配置名称</div><input type="text" id="eName">
+  <div class="label">备注</div><input type="text" id="eNotes">
+  <div class="label">YAML 内容（可直接修改）</div>
+  <textarea id="eYaml" style="min-height:280px;font-size:11.5px"></textarea>
+  <div style="margin-top:14px;display:flex;gap:8px"><button class="btn primary" id="eSave">保存</button><button class="btn" onclick="closeModal('editModal')">取消</button></div>
+</div></div>
+
+<div class="modal" id="bindModal"><div class="mbox">
+  <span class="close" onclick="closeModal('bindModal')">✕</span>
+  <h3>绑定设备</h3>
+  <div class="label">选择配置</div>
+  <select id="bProfile"></select>
+  <div class="label">设备码（手机 APP 首页显示，8 位）</div>
+  <input type="text" id="bCode" placeholder="例如 AB12CD34" maxlength="8">
+  <div class="label">设备名称（可选，方便识别）</div>
+  <input type="text" id="bName" placeholder="例如：小明的手机">
+  <div style="margin-top:14px;display:flex;gap:8px"><button class="btn primary" id="bSave">绑定</button><button class="btn" onclick="closeModal('bindModal')">取消</button></div>
+</div></div>
+
+<div id="toast"></div>
+<script>
+/* ============ GitHub 私有仓库数据访问层 ============ */
+const REPO_OWNER = "qinhuai888";
+const DATA_REPO = "roseproxy";
+let PAT = localStorage.getItem("roseproxy_pat") || "";
+const $ = s => document.querySelector(s);
+
+async function gh(url, method="GET", body=null){
+  const opt = {method, headers:{Authorization:"Bearer "+PAT, Accept:"application/vnd.github+json", "X-GitHub-Api-Version":"2022-11-28"}};
+  if(body) opt.headers["Content-Type"]="application/json";
+  if(body) opt.body = JSON.stringify(body);
+  const r = await fetch(url, opt);
+  const t = await r.text();
+  if(!r.ok) throw new Error("GitHub API "+r.status+": "+(t.slice(0,200)));
+  return t? JSON.parse(t): null;
+}
+async function ghContents(path){
+  return gh(`https://api.github.com/repos/${REPO_OWNER}/${DATA_REPO}/contents/${path}`);
+}
+async function ghReadJson(path, def){
+  try{ const c = await ghContents(path); return JSON.parse(atob(c.content.replace(/\n/g,""))); }
+  catch(e){ return JSON.parse(JSON.stringify(def)); }
+}
+async function ghWrite(path, obj){
+  let sha=null;
+  try{ sha = (await ghContents(path)).sha; }catch(e){}
+  await gh(`https://api.github.com/repos/${REPO_OWNER}/${DATA_REPO}/contents/${path}`,"PUT",{
+    message:"roseproxy-web update "+path, content:btoa(unescape(encodeURIComponent(JSON.stringify(obj,null,2)))), sha});
+}
+async function ghWriteRaw(path, text, msg){
+  let sha=null;
+  try{ sha = (await ghContents(path)).sha; }catch(e){}
+  await gh(`https://api.github.com/repos/${REPO_OWNER}/${DATA_REPO}/contents/${path}`,"PUT",{
+    message:msg||("update "+path), content:btoa(unescape(encodeURIComponent(text))), sha});
+}
+async function ghDelete(path, msg){
+  const c = await ghContents(path);
+  await gh(`https://api.github.com/repos/${REPO_OWNER}/${DATA_REPO}/contents/${path}`,"DELETE",{message:msg||("delete "+path), sha:c.sha});
+}
+
+/* ============ 状态 ============ */
+let state = {registry:{profiles:[]}, devices:{devices:[]}, records:{records:[]}};
+
+async function loadAll(){
+  const [reg, dev, rec] = await Promise.all([
+    ghReadJson("data/registry.json",{profiles:[]}),
+    ghReadJson("data/devices.json",{devices:[]}),
+    ghReadJson("data/records.json",{records:[]})]);
+  state.registry=reg; state.devices=dev; state.records=rec;
+  renderProfiles(); renderDevices(); renderRecords();
+}
+async function saveRegistry(){ await ghWrite("data/registry.json", state.registry); }
+async function saveDevices(){ await ghWrite("data/devices.json", state.devices); }
+async function addRecord(action, detail){
+  state.records.records.push({time:new Date().toLocaleString("zh-CN",{hour12:false}), action, detail});
+  if(state.records.records.length>200) state.records.records=state.records.records.slice(-200);
+  await ghWrite("data/records.json", state.records);
+}
+function toast(msg, ms=2600){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),ms); }
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
+function joinCode(){ const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<8;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+function uid(){ return "p"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+/* ============ 登录 ============ */
+function showLogin(){ $("#loginView").style.display="block"; $("#appView").style.display="none"; }
+function showApp(){ $("#loginView").style.display="none"; $("#appView").style.display="block"; }
+$("#btnLogin").addEventListener("click", async ()=>{
+  PAT = $("#loginToken").value.trim();
+  if(!PAT){ toast("请输入令牌"); return; }
+  try{
+    await ghContents("data/registry.json");
+    localStorage.setItem("roseproxy_pat", PAT);
+    $("#ownerInfo").textContent = "私有仓库："+REPO_OWNER+"/"+DATA_REPO+"（已连接）";
+    showApp(); loadAll();
+  }catch(e){ toast("验证失败："+e.message, 4000); }
+});
+$("#btnLogout").addEventListener("click", ()=>{ PAT=""; localStorage.removeItem("roseproxy_pat"); $("#loginToken").value=""; showLogin(); });
+
+/* ============ 配置管理 ============ */
+function renderProfiles(){
+  const tb=$("#profileRows"); tb.innerHTML="";
+  $("#emptyHint").style.display = state.registry.profiles.length? "none":"block";
+  state.registry.profiles.forEach(p=>{
+    const devs = state.devices.devices.filter(d=>d.profile_id===p.id);
+    const full = devs.length>=3;
+    const tr=document.createElement("tr");
+    tr.innerHTML = `
+      <td><div class="name">${esc(p.name)}</div><div class="muted">${esc(p.file)}</div></td>
+      <td><span class="muted">${p.nodes||0} 个</span></td>
+      <td><span class="code">${esc(p.join_code)}</span> <button class="btn sm" data-a="code" data-id="${p.id}">重置</button></td>
+      <td><span class="badge ${full?'full':''}">${devs.length}/3</span></td>
+      <td><label class="switch"><input type="checkbox" ${p.enabled?"checked":""} data-a="toggle" data-id="${p.id}"><span class="sl"></span></label>
+          <span class="badge ${p.enabled?"":"off"}">${p.enabled?"启用":"停用"}</span></td>
+      <td>
+        <div class="row">
+          <button class="btn sm" data-a="edit" data-id="${p.id}">编辑</button>
+          <button class="btn sm" data-a="copy" data-id="${p.id}">复制YAML</button>
+          <button class="btn sm danger" data-a="del" data-id="${p.id}">删除</button>
+        </div>
+      </td>`;
+    tb.appendChild(tr);
+  });
+}
+$("#profileRows").addEventListener("click", async e=>{
+  const b=e.target.closest("button[data-a]"); if(!b) return;
+  const p = state.registry.profiles.find(x=>x.id===b.dataset.id); if(!p) return;
+  if(b.dataset.a==="code"){
+    if(!confirm("确定重置「"+p.name+"」的接入码？手机端需用新码重新接入。")) return;
+    p.join_code = joinCode(); await saveRegistry();
+    await addRecord("reset_code","重置配置「"+p.name+"」接入码");
+    toast("接入码已重置"); renderProfiles();
+  }else if(b.dataset.a==="edit"){
+    state.editing=p;
+    $("#editName").textContent=p.name; $("#eName").value=p.name; $("#eNotes").value=p.notes||"";
+    try{ const c=await ghContents("profiles/"+encodeURIComponent(p.file)); $("#eYaml").value=decodeURIComponent(escape(atob(c.content.replace(/\n/g,"")))); }
+    catch(err){ $("#eYaml").value="（读取失败："+err.message+"）"; }
+    $("#editModal").classList.add("show");
+  }else if(b.dataset.a==="copy"){
+    try{ const c=await ghContents("profiles/"+encodeURIComponent(p.file));
+      await navigator.clipboard.writeText(decodeURIComponent(escape(atob(c.content.replace(/\n/g,"")))));
+      toast("YAML 已复制到剪贴板"); }catch(err){ toast("复制失败："+err.message); }
+  }else if(b.dataset.a==="del"){
+    if(!confirm("删除配置「"+p.name+"」？将同时删除仓库中的 YAML 文件，并解绑其下所有设备。")) return;
+    try{ await ghDelete("profiles/"+encodeURIComponent(p.file)); }catch(err){}
+    state.devices.devices = state.devices.devices.filter(d=>d.profile_id!==p.id);
+    state.registry.profiles = state.registry.profiles.filter(x=>x.id!==p.id);
+    await saveRegistry(); await saveDevices();
+    await addRecord("delete","删除配置「"+p.name+"」");
+    toast("已删除"); loadAll();
+  }
+});
+$("#profileRows").addEventListener("change", async e=>{
+  const el=e.target.closest("input[data-a=toggle]"); if(!el) return;
+  const p = state.registry.profiles.find(x=>x.id===el.dataset.id); if(!p) return;
+  p.enabled = el.checked; await saveRegistry();
+  await addRecord(el.checked?"enable":"disable","「"+(el.checked?"启用":"停用")+"」配置 "+p.name);
+  toast("已"+(el.checked?"启用":"停用")); renderProfiles();
+});
+$("#eSave").addEventListener("click", async ()=>{
+  const p=state.editing; if(!p) return;
+  p.name = $("#eName").value.trim() || p.name;
+  p.notes = $("#eNotes").value.trim();
+  const yaml = $("#eYaml").value;
+  if(yaml.trim()){ try{ await ghWriteRaw("profiles/"+encodeURIComponent(p.file), yaml, "update profile "+p.name); }catch(e){ toast("保存 YAML 失败："+e.message); return; } }
+  await saveRegistry(); await addRecord("edit","编辑配置「"+p.name+"」");
+  toast("已保存"); closeModal("editModal"); loadAll();
+});
+
+/* ============ 生成配置 ============ */
+/* 分享链接解析 + Clash YAML 生成（纯前端，不依赖后端） */
+function b64d(s){ s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="=";
+  const bin=atob(s); const bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes); }
+function parseLinks(text){
+  const nodes=[]; const seen=new Set();
+  for(const line of text.split(/[\r\n\s]+/)){
+    if(!line) continue; let n=null;
+    if(line.startsWith("ss://")){
+      let body=line.slice(5), name="";
+      const hi=body.indexOf("#"); if(hi>=0){ name=decodeURIComponent(body.slice(hi+1)); body=body.slice(0,hi); }
+      let m=body.match(/^([^@]+)@([^:]+):(\d+)$/);
+      if(m){ const ui=b64d(m[1]); const um=ui.match(/^([^:]+):(.+)$/); if(um) n={name:name||("SS-"+m[2]),type:"ss",server:m[2],port:Number(m[3]),cipher:um[1],password:um[2],udp:true}; }
+      else{ const dec=b64d(body); const mm=dec.match(/^([^:]+):([^@]+)@([^:]+):(\d+)$/); if(mm) n={name:name||("SS-"+mm[3]),type:"ss",server:mm[3],port:Number(mm[4]),cipher:mm[1],password:mm[2],udp:true}; }
+    } else if(line.startsWith("vmess://")){
+      try{ const j=JSON.parse(b64d(line.slice(8)));
+        n={name:j.ps||("VMess-"+j.add),type:"vmess",server:j.add,port:Number(j.port),uuid:j.id,alterId:Number(j.aid||0),cipher:j.scy||"auto",tls:String(j.tls)==="true",udp:true};
+        if(j.net==="ws") n.network="ws", n["ws-opts"]={path:j.path||"/",headers:{Host:j.host||""}};
+        else if(j.net==="grpc") n.network="grpc";
+      }catch(e){}
+    } else if(line.startsWith("vless://")||line.startsWith("trojan://")){
+      const t=line.slice(0,line.indexOf("://"));
+      const m=line.match(/^[a-z]+:\/\/([^@]+)@([^:]+):(\d+)(.*)$/); if(!m) continue;
+      const [,ui,host,port,rest]=m; let frag="",q="";
+      let r2=rest; const hi=r2.indexOf("#"); if(hi>=0){frag=decodeURIComponent(r2.slice(hi+1)); r2=r2.slice(0,hi);}
+      if(r2.startsWith("?")) q=r2.slice(1);
+      const params=new URLSearchParams(q);
+      n={name:frag||(t.toUpperCase()+"-"+host+":"+port),type:t,server:host,port:Number(port),udp:true};
+      if(t==="trojan") n.password=ui; else n.uuid=ui;
+      if(params.get("type")==="ws") n.network="ws", n["ws-opts"]={path:params.get("path")||"/",headers:{Host:params.get("host")||""}};
+      if(params.get("security")==="tls"){ n.tls=true; if(params.get("sni")) n.servername=params.get("sni"); }
+    }
+    if(n && n.server && n.port){ const k=n.type+"|"+n.server+"|"+n.port; if(!seen.has(k)){ seen.add(k); nodes.push(n);} }
+  }
+  return nodes;
+}
+function yamlVal(v, indent){
+  const sp=" ".repeat(indent||0);
+  if(typeof v==="string") return sp+JSON.stringify(v);
+  if(typeof v==="number"||typeof v==="boolean") return sp+v;
+  if(Array.isArray(v)){
+    if(!v.length) return sp+"[]";
+    return v.map(x=> typeof x==="object" && x!==null ? sp+"- "+yamlObj(x, indent+2).trim() : sp+"- "+yamlVal(x,0).trim()).join("\n");
+  }
+  if(v && typeof v==="object") return sp+yamlObj(v, indent);
+  return sp+"null";
+}
+function yamlObj(obj, indent){
+  const sp=" ".repeat(indent||0); const out=[];
+  for(const k of Object.keys(obj)){
+    const val=obj[k];
+    if(Array.isArray(val)&&val.length){
+      out.push(sp+k+":");
+      out.push(yamlVal(val, indent+2));
+    } else if(val && typeof val==="object"){
+      out.push(sp+k+":");
+      out.push(yamlObj(val, indent+2));
+    } else out.push(sp+k+": "+yamlVal(val, indent));
+  }
+  return out.join("\n");
+}
+function buildConfig(proxies){
+  const names=proxies.map(p=>p.name);
+  const cfg={port:7890,"socks-port":7891,"allow-lan":false,mode:"Rule","log-level":"info",
+    "external-controller":"127.0.0.1:9090",
+    dns:{enable:true,"listen":"0.0.0.0:1053",ipv6:false,"enhanced-mode":"fake-ip","fake-ip-range":"198.18.0.1/16",
+      nameserver:["119.29.29.29","223.5.5.5","1.1.1.1"],fallback:["8.8.8.8","8.8.4.4"]},
+    proxies,
+    "proxy-groups":[
+      {name:"🔰 选择节点",type:"select",proxies:names.concat(["DIRECT"])},
+      {name:"♻️ 自动选择",type:"url-test",url:"http://www.gstatic.com/generate_204",interval:300,proxies:names}],
+    rules:["GEOIP,CN,DIRECT","MATCH,🔰 选择节点"]};
+  return yamlObj(cfg,0);
+}
+$("#gSubmit").addEventListener("click", async ()=>{
+  const name=$("#gName").value.trim();
+  const links=$("#gLinks").value;
+  if(!name){ toast("请填写配置名称"); return; }
+  if(!links.trim()){ toast("请粘贴分享链接"); return; }
+  const nodes=parseLinks(links);
+  if(!nodes.length){ toast("未解析到有效节点，请检查链接格式"); return; }
+  const btn=$("#gSubmit"); btn.disabled=true;
+  try{
+    const yaml=buildConfig(nodes);
+    const fname=name.replace(/[\\\/:*?"<>|]/g,"_")+"_"+new Date().toISOString().slice(0,10).replace(/-/g,"")+".yaml";
+    await ghWriteRaw("profiles/"+encodeURIComponent(fname), yaml, "create profile "+name);
+    const p={id:uid(), name, file:fname, enabled:true, join_code:joinCode(), nodes:nodes.length,
+      created_at:new Date().toLocaleString("zh-CN",{hour12:false}), updated_at:new Date().toLocaleString("zh-CN",{hour12:false}), notes:$("#gNotes").value.trim()};
+    state.registry.profiles.push(p); await saveRegistry();
+    await addRecord("generate","网站生成配置「"+name+"」（"+nodes.length+" 个节点，接入码 "+p.join_code+"）");
+    toast("已生成并保存到私有仓库 ✓"); $("#gName").value=""; $("#gLinks").value=""; $("#gNotes").value="";
+    loadAll();
+  }catch(e){ toast("生成失败："+e.message, 4000); }
+  btn.disabled=false;
+});
+
+/* ============ 上传已有配置 ============ */
+$("#uSubmit").addEventListener("click", async ()=>{
+  const file = $("#uFile").files[0];
+  if(!file){ toast("请选择 YAML 文件"); return; }
+  const btn=$("#uSubmit"); btn.disabled=true;
+  try{
+    const text = await file.text();
+    if(!text.includes("proxies:")){ toast("文件内容看起来不是 Clash 配置（缺少 proxies 段）"); return; }
+    const name = ($("#uName").value.trim()) || file.name.replace(/\.(yaml|yml|txt)$/i,"");
+    const fname = name.replace(/[\\\/:*?"<>|]/g,"_")+"_"+new Date().toISOString().slice(0,10).replace(/-/g,"")+".yaml";
+    await ghWriteRaw("profiles/"+encodeURIComponent(fname), text, "upload profile "+name);
+    const nodes = (text.match(/^\s*-\s*\{?name:/gm)||[]).length || (text.match(/^\s*- name:/gm)||[]).length;
+    const p={id:uid(), name, file:fname, enabled:true, join_code:joinCode(), nodes,
+      created_at:new Date().toLocaleString("zh-CN",{hour12:false}), updated_at:new Date().toLocaleString("zh-CN",{hour12:false}), notes:$("#gNotes").value.trim()||"手动上传"};
+    state.registry.profiles.push(p); await saveRegistry();
+    await addRecord("upload","上传配置「"+name+"」（"+nodes+" 个节点，接入码 "+p.join_code+"）");
+    toast("已上传并入库 ✓"); $("#uName").value=""; $("#uFile").value=""; loadAll();
+  }catch(e){ toast("上传失败："+e.message, 4000); }
+  btn.disabled=false;
+});
+
+/* ============ 设备管理 ============ */
+function renderDevices(){
+  const tb=$("#deviceRows"); tb.innerHTML="";
+  $("#deviceEmpty").style.display = state.devices.devices.length? "none":"block";
+  state.devices.devices.forEach(d=>{
+    const p = state.registry.profiles.find(x=>x.id===d.profile_id);
+    const tr=document.createElement("tr");
+    tr.innerHTML = `<td><span class="code">${esc(d.code)}</span></td><td>${esc(d.name||"—")}</td>
+      <td>${esc(p?p.name:"（配置已删除）")}</td><td class="muted">${esc(d.bound_at||"")}</td>
+      <td><button class="btn sm danger" data-d="${esc(d.code)}">解绑</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+$("#deviceRows").addEventListener("click", async e=>{
+  const b=e.target.closest("button[data-d]"); if(!b) return;
+  const code=b.dataset.d;
+  if(!confirm("解绑设备 "+code+"？解绑后该手机将无法再使用对应配置（名额释放）。")) return;
+  state.devices.devices = state.devices.devices.filter(d=>d.code!==code);
+  await saveDevices(); await addRecord("unbind","解绑设备 "+code);
+  toast("已解绑"); renderDevices();
+});
+$("#bSave").addEventListener("click", async ()=>{
+  const pid=$("#bProfile").value; const code=$("#bCode").value.trim().toUpperCase();
+  const name=$("#bName").value.trim();
+  if(!pid){ toast("请选择配置"); return; }
+  if(!/^[A-Z0-9]{8}$/.test(code)){ toast("设备码应为 8 位字母数字"); return; }
+  const p=state.registry.profiles.find(x=>x.id===pid);
+  const devs=state.devices.devices.filter(d=>d.profile_id===pid);
+  if(devs.length>=3){ toast("该配置已绑定 3 台设备，已达上限"); return; }
+  if(state.devices.devices.some(d=>d.code===code)){ toast("该设备码已绑定到其他配置"); return; }
+  state.devices.devices.push({code, name:name||("设备 "+code), profile_id:pid, bound_at:new Date().toLocaleString("zh-CN",{hour12:false}), last_seen:null});
+  await saveDevices(); await addRecord("bind","绑定设备 "+code+(name?"（"+name+"）":"")+" → 配置「"+p.name+"」");
+  toast("绑定成功"); closeModal("bindModal"); renderDevices();
+});
+function openBindModal(){
+  const sel=$("#bProfile"); sel.innerHTML="";
+  state.registry.profiles.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent=p.name+"（"+(state.devices.devices.filter(d=>d.profile_id===p.id).length)+"/3）"; sel.appendChild(o); });
+  $("#bCode").value=""; $("#bName").value=""; $("#bindModal").classList.add("show");
+}
+
+/* ============ 记录 ============ */
+function renderRecords(){
+  const box=$("#records"); box.innerHTML="";
+  if(!state.records.records.length){ box.innerHTML='<div class="muted">暂无记录。</div>'; return; }
+  state.records.records.slice().reverse().forEach(r=>{
+    const d=document.createElement("div"); d.className="rec";
+    d.innerHTML=`<span class="t">${esc(r.time)}</span><span class="a">${esc(r.action)}</span><span class="d">${esc(r.detail)}</span>`;
+    box.appendChild(d);
+  });
+}
+
+/* ============ 杂项 ============ */
+function closeModal(id){ $("#"+id).classList.remove("show"); }
+document.querySelectorAll(".tab button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tab button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tabpane").forEach(x=>x.classList.remove("show"));
+  b.classList.add("active"); $("#"+b.dataset.t).classList.add("show");
+}));
+document.addEventListener("keydown", e=>{ if(e.key==="Enter" && $("#loginView").style.display!=="none") $("#btnLogin").click(); });
+
+/* 入口 */
+(function init(){
+  $("#infoRepo").textContent = "https://github.com/"+REPO_OWNER+"/"+DATA_REPO;
+  $("#infoWeb").textContent = "https://"+REPO_OWNER+".github.io/roseproxy-web/";
+  if(PAT){
+    ghContents("data/registry.json").then(()=>{ showApp(); loadAll(); }).catch(()=>{ localStorage.removeItem("roseproxy_pat"); PAT=""; showLogin(); });
+  } else showLogin();
+})();
+</script>
+</body>
+</html>
